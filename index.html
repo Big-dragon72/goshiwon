@@ -1,0 +1,529 @@
+<!-- index.html version: 2025.12.15v002 -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>고시원 관리 시스템</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .btn {
+      padding: 6px 10px;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .btn-primary {
+      background: #007bff;
+      color: white;
+    }
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+    .summary-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .summary-item {
+      background: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      box-shadow: 0 0 2px rgba(0,0,0,0.1);
+      cursor: default;
+      font-size: 13px;
+    }
+    .summary-item.clickable {
+      cursor: pointer;
+    }
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .select {
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .room-card {
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 0 3px rgba(0,0,0,0.15);
+      padding: 8px;
+      cursor: pointer;
+      border-left: 4px solid #28a745;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+    }
+    .room-card.unpaid {
+      border-left-color: #dc3545;
+      background: #ffecec;
+    }
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+    .room-status {
+      font-size: 12px;
+      color: #555;
+    }
+    .room-details {
+      margin-top: 4px;
+      border-top: 1px solid #eee;
+      padding-top: 4px;
+      display: none;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 12px;
+    }
+    .room-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      background: #eee;
+      margin-left: 4px;
+    }
+    .badge-unpaid {
+      background: #dc3545;
+      color: white;
+    }
+    .badge-empty {
+      background: #6c757d;
+      color: white;
+    }
+    /* --- Part 1에서 이어지는 스타일 --- */
+
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 3000;
+    }
+    .modal {
+      background: white;
+      padding: 16px;
+      border-radius: 6px;
+      width: 350px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .modal-close {
+      cursor: pointer;
+      font-size: 20px;
+      padding: 0 6px;
+    }
+    .input-row {
+      margin-bottom: 8px;
+    }
+    .input-label {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+    .input {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* 설정 패널 */
+    .settings-backdrop {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .settings-panel {
+      background: white;
+      width: 400px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius: 6px;
+      padding: 16px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .settings-section {
+      margin-bottom: 20px;
+    }
+    .settings-section h3 {
+      margin: 0 0 6px 0;
+      font-size: 15px;
+    }
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .tag {
+      background: #eee;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: default;
+    }
+    .tag span {
+      margin-left: 6px;
+      cursor: pointer;
+      color: red;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+    }
+    @media (max-width: 600px) {
+      .container {
+        max-width: 100%;
+        padding: 12px;
+      }
+
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
+  }
+
+  /* ⭐⭐⭐ 3열 UI CSS 추가 ⭐⭐⭐ */
+
+  /* 3열 그리드 */
+  #roomGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  /* 카드 스타일 */
+  .room-card-simple {
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 0 3px rgba(0,0,0,0.15);
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  /* 요약 3줄 */
+  .room-summary {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .room-title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .room-name {
+    font-size: 15px;
+  }
+
+  .room-status {
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  /* 상세 정보 */
+  .room-details {
+    display: none;
+    flex-direction: column;
+    margin-top: 10px;
+    gap: 4px;
+    font-size: 13px;
+  }
+
+  /* ⭐ 상태별 카드 색상 ⭐ */
+
+  /* 사용중(완납) → 연한 파랑 */
+  .room-card-simple.used {
+    background-color: #e8f3ff;
+  }
+
+  /* 미납 → 연한 빨강 */
+  .room-card-simple.unpaid {
+    background-color: #ffe5e5;
+  }
+
+  /* 빈방 → 기본 흰색 */
+  .room-card-simple.empty {
+    background-color: #ffffff;
+  }
+
+  /* ⭐ 전체 방 현황 표 가로 스크롤 ⭐ */
+  .total-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* 전체 방 현황 모달은 넓게 표시 */
+  #totalModalBackdrop .modal {
+    width: 95vw;        /* 화면 가로의 95% */
+    max-width: 900px;   /* PC에서도 너무 넓어지지 않도록 */
+  }
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="title" id="goshiwonName">고시원</div>
+      <div>
+        <button id="settingsBtn" class="btn btn-secondary">설정</button>
+      </div>
+    </div>
+
+    <div class="summary-bar">
+      <div id="totalRentBox" class="summary-item clickable">
+        총 월세: <span id="totalRentText">0원</span>
+      </div>
+      <div id="unpaidSummary" class="summary-item clickable">
+        미납자: 0명
+      </div>
+    </div>
+
+    <div class="filters">
+      <select id="buildingFilter" class="select">
+        <option value="">건물 선택</option>
+      </select>
+      <select id="floorFilter" class="select">
+        <option value="">층 선택</option>
+      </select>
+    </div>
+
+    <div id="roomGrid" class="grid"></div>
+  </div>
+  <!-- ========================= -->
+  <!-- 방 입력/수정 모달 -->
+  <!-- ========================= -->
+  <div id="roomModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="roomModalTitle">방 등록</div>
+        <div class="modal-close" id="roomModalClose">×</div>
+      </div>
+
+      <div>
+        <div class="input-row">
+          <div class="input-label">건물</div>
+          <select id="roomBuildingSelect" class="input"></select>
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">층</div>
+          <select id="roomFloorSelect" class="input"></select>
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">호실</div>
+          <input id="roomNumberInput" class="input" placeholder="예: 101" />
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">이름</div>
+          <input id="nameInput" class="input" placeholder="이름" />
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">전화번호1</div>
+          <input id="phone1Input" class="input" placeholder="전화번호1" />
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">전화번호2</div>
+          <input id="phone2Input" class="input" placeholder="전화번호2 (선택)" />
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">입실료 (만원 단위)</div>
+          <input id="rentInput" class="input" type="number" step="0.01" placeholder="예: 30" />
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">관리비 (만원 단위)</div>
+          <input id="feeInput" class="input" type="number" step="0.01" placeholder="예: 5" />
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">입실일</div>
+          <input id="startDateInput" class="input" type="date" />
+        </div>
+
+        <div class="input-row">
+          <div class="input-label">비고</div>
+          <textarea id="memoInput" class="input" rows="3" placeholder="특이사항 메모"></textarea>
+        </div>
+
+        <div style="margin-top:8px; display:flex; gap:6px; justify-content:flex-end;">
+          <button id="roomModalSave" class="btn btn-primary">저장</button>
+          <button id="roomModalCancel" class="btn btn-secondary">취소</button>
+          <button id="roomModalCloseBtn" class="btn btn-secondary">닫기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================= -->
+  <!-- 설정 페이지 -->
+  <!-- ========================= -->
+  <div id="settingsBackdrop" class="settings-backdrop">
+    <div class="settings-panel">
+      <div class="modal-header">
+        <div class="modal-title">설정</div>
+        <div class="modal-close" id="settingsClose">×</div>
+      </div>
+
+      <!-- 고시원 이름 -->
+      <div class="settings-section">
+        <h3>고시원 이름</h3>
+        <input id="goshiwonNameInput" class="input" placeholder="고시원 이름" />
+        <button id="saveGoshiwonNameBtn" class="btn btn-primary" style="margin-top:4px;">이름 저장</button>
+      </div>
+
+      <!-- 건물 관리 -->
+      <div class="settings-section">
+        <h3>건물 관리</h3>
+
+        <!-- 건물명 입력 -->
+        <input id="buildingNameInput" class="input" placeholder="건물명 입력" />
+
+        <!-- 고시원 이름 입력 (새로 추가됨) -->
+        <input id="goshiwonNameForBuildingInput" class="input" placeholder="고시원 이름 입력" style="margin-top:4px;" />
+
+        <!-- 건물 추가 버튼 -->
+        <button id="addBuildingBtn" class="btn btn-primary" style="width:100%; margin-top:4px;">건물 추가</button>
+
+        <!-- 건물 리스트 -->
+        <div id="buildingList" class="tag-list"></div>
+      </div>
+
+      <!-- 층 관리 -->
+      <div class="settings-section">
+        <h3>층 관리</h3>
+        <select id="buildingSelectForFloor" class="input"></select>
+        <input id="floorNumberInput" class="input" placeholder="층 번호 입력 (예: 1)" />
+        <button id="addFloorBtn" class="btn btn-primary" style="width:100%; margin-top:4px;">층 추가</button>
+        <div id="floorList" class="tag-list"></div>
+      </div>
+
+      <!-- 방 추가 -->
+      <div class="settings-section">
+        <h3>방 관리</h3>
+        <button id="addRoomFromSettingsBtn" class="btn btn-primary" style="width:100%;">방 추가</button>
+      </div>
+
+      <!-- 백업/복원 -->
+      <div class="settings-section">
+        <h3>백업 / 복원</h3>
+        <button id="backupBtn" class="btn btn-secondary">백업</button>
+        <button id="restoreBtn" class="btn btn-secondary">복원</button>
+        <input id="restoreFileInput" type="file" style="display:none;" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================= -->
+  <!-- 미납자 팝업 -->
+  <!-- ========================= -->
+  <div id="unpaidModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">미납자 목록</div>
+        <div class="modal-close" id="unpaidModalClose">×</div>
+      </div>
+      <div id="unpaidModalBody"></div>
+    </div>
+  </div>
+
+  <!-- ========================= -->
+  <!-- 전체 방 현황 팝업 -->
+  <!-- ========================= -->
+  <div id="totalModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">전체 방 현황</div>
+        <div class="modal-close" id="totalModalClose">×</div>
+      </div>
+      <div id="totalModalBody"></div>
+    </div>
+  </div>
+  <!-- ========================= -->
+  <!-- 스크립트 연결 -->
+  <!-- ========================= -->
+  <script src="app.js"></script>
+
+</body>
+</html>
